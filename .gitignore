@@ -1,3 +1,8 @@
+# chroma.sqlite3 DB
+part1/database/chroma
+*.sqlite3
+length.bin
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
