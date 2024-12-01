@@ -1,9 +1,14 @@
 from dotenv import load_dotenv
 
 #from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain.vectorstores.chroma import Chroma
-from langchain_community.document_loaders import WebBaseLoader, TextLoader
+#from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
+#from langchain.vectorstores.chroma import Chroma
+from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import PyPDFLoader
+from docx import Document
 from langchain.text_splitter import CharacterTextSplitter
 import bs4
 
@@ -14,6 +19,25 @@ load_dotenv()
 COLLECTION_NAME = "basic_vectordb"
 PERSIST_DIRECTORY = "./../../database/chroma"
 
+# docx docs
+def load_docx(file_path: str):
+    # DOCX 파일 로드
+    doc = Document(file_path)
+    text = []
+    for paragraph in doc.paragraphs:
+        text.append(paragraph.text)
+    return "\n".join(text)
+
+def embedding_from_docx(file_path: str) -> dict:
+    # DOCX 문서를 로드
+    text = load_docx(file_path)
+    
+    # 텍스트를 작은 청크로 분할
+    splitter = CharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+    split_docs = splitter.create_documents([text])
+    
+    # Chroma DB에 저장
+    return chroma_create(split_docs, COLLECTION_NAME, PERSIST_DIRECTORY)
 
 # text docs
 def embedding_from_text(file_path: str) -> dict:
@@ -93,9 +117,14 @@ if __name__ == "__main__":
 
     # retrieve object
 
-    chromaDB = embedding_from_text("./../../database/products.txt")
+    # chromaDB = embedding_from_text("./../../database/products.txt")
+
+    # retriever = chromaDB.as_retriever()
+    # docs = retriever.get_relevant_documents("패캠 냉장고")
+
+    chromaDB = embedding_from_docx("./../../database/R9_integrated_Specification_PUI.docx")
 
     retriever = chromaDB.as_retriever()
-    docs = retriever.get_relevant_documents("패캠 냉장고")
+    docs = retriever.get_relevant_documents("R9 시스템구성")
 
     print(docs)
